@@ -2,10 +2,11 @@
 
 import pandas as pd
 import numpy as np
+import math
 import sys
 
 # dataset_name = sys.argv[0]  # Obtain dataset name
-dataset_name = 'y9hTuugGdiq'
+dataset_name = 'HZ2iMMBsBQ9'
 
 # Access CSV stats
 per_scene_neighborhood_stats_path = '/home/fernand0labra/rai-matterport/data/Per_Scene_Neighborhood_Stats.csv'
@@ -18,7 +19,8 @@ per_scene_neighborhood_stats_series = per_scene_neighborhood_stats_df.loc[per_sc
 num_regions = int(per_scene_neighborhood_stats_series['# Regions'].values[0])
 num_objects = int(per_scene_neighborhood_stats_series['# Objects'].values[0])
 
-identifier_array = np.empty((num_objects + num_regions + 1), dtype=np.int32) # Scene included
+identifier_array_nyu40id = np.empty((num_objects + num_regions + 1), dtype=np.int32) # Scene included
+identifier_array_nyuid = np.empty((num_objects + num_regions + 1), dtype=np.int32) # Scene included
 instance_array = np.empty((num_objects + num_regions, 2), dtype=np.uint32)
 
 ###
@@ -43,31 +45,47 @@ for idx, region_row in per_scene_region_neighborhoods_series.iterrows():  # For 
 
         # [0, num_objects - 1]
         instance_array[instance_id-1][0] = region_row['Region #'] - 1 + num_objects
-        category_id = category_mapping_df.loc[category_mapping_df['raw_category'] == category]['nyu40id'].values
 
-        # Save the nyu40id 
-        if category_id.__len__() > 0:
-            category_id_value = int(category_id[0])
+        category_id_nyu40id = category_mapping_df.loc[category_mapping_df['raw_category'] == category]['nyu40id'].values
+
+        # Save the nyu40id and instance indexes
+        if category_id_nyu40id.__len__() > 0:
+            category_id_value = int(category_id_nyu40id[0])
             
             if category_id_value == 0: continue  # Category 0 is non existant
 
-            identifier_array[instance_id - 1] = category_id_value
+            identifier_array_nyu40id[instance_id - 1] = category_id_value
             instance_array[instance_id - 1][1] = instance_id - 1
         else:
-            identifier_array[instance_id - 1] = 40
+            identifier_array_nyu40id[instance_id - 1] = 40
             instance_array[instance_id - 1][1] = instance_id - 1
+
+        category_id_nyuid = category_mapping_df.loc[category_mapping_df['raw_category'] == category]['nyuId'].values
+
+        # Save the nyuid 
+        if category_id_nyuid.__len__() > 0 and not math.isnan(category_id_nyuid[0]):
+            category_id_value = int(category_id_nyuid[0])
+            
+            if category_id_value == 0: continue  # Category 0 is non existant
+
+            identifier_array_nyuid[instance_id - 1] = category_id_value
+        else:
+            identifier_array_nyuid[instance_id - 1] = 20
 
 # Setup room nodes and edges
 for i in range(num_objects, num_objects + num_regions):
-    identifier_array[i] = 41  # Room 
+    identifier_array_nyu40id[i] = 41  # Room 
+    identifier_array_nyuid[i] = 891  # Room 
 
     instance_array[i][0] = num_objects + num_regions  # Building
     instance_array[i][1] = i
 
 # Setup building node
-identifier_array[num_objects + num_regions] = 42
+identifier_array_nyu40id[num_objects + num_regions] = 42
+identifier_array_nyuid[num_objects + num_regions] = 892
 
 f = open("/home/fernand0labra/rai-matterport/docs/" + dataset_name + ".txt", "a")
-f.write(str(identifier_array.tolist()) + "\n")
+f.write(str(identifier_array_nyu40id.tolist()) + "\n")
+f.write(str(identifier_array_nyuid.tolist()) + "\n")
 f.write(str(instance_array.tolist()) + "\n")
 f.close()
