@@ -6,7 +6,7 @@ import math
 import sys
 
 # dataset_name = sys.argv[0]  # Obtain dataset name
-dataset_name = 'HZ2iMMBsBQ9'
+dataset_name = 'gQ3xxshDiCz'
 
 # Access CSV stats
 per_scene_neighborhood_stats_path = '/home/fernand0labra/rai-matterport/data/Per_Scene_Neighborhood_Stats.csv'
@@ -49,7 +49,7 @@ for idx, region_row in per_scene_region_neighborhoods_series.iterrows():  # For 
         category_id_nyu40id = category_mapping_df.loc[category_mapping_df['raw_category'] == category]['nyu40id'].values
 
         # Save the nyu40id and instance indexes
-        if category_id_nyu40id.__len__() > 0:
+        if category_id_nyu40id.__len__() > 0 and not math.isnan(category_id_nyu40id[0]):
             category_id_value = int(category_id_nyu40id[0])
             
             if category_id_value == 0: continue  # Category 0 is non existant
