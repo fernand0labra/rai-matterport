@@ -66,7 +66,7 @@ This work allows the construction of node and edge vectors in a tree-like hierar
 * The size of the node vectors is [num_objects + num_rooms + 1] including the building as the root node.
 * The size of the edge vector is [num_objects + num_rooms, 2] without including a recursive edge from/to the building.
 
-The following code shows the available function on [/src/vectorize.py](/rai-matterport/src/vectorize.py) and documented results for different scenes can be found under [/docs](/rai-matterport/docs):
+The following code shows the available function on [/src/vectorize.py](/src/vectorize.py) and documented results for different scenes can be found under [/docs](/docs/):
 
 ```
 def vectorize(dataset_name: str, file_output=False):
