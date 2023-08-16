@@ -28,3 +28,10 @@ https://pytorch-geometric.readthedocs.io/en/latest/index.html
 
 # Solve NaN appearance on nyu40Id
 # Update README.md
+
+
+##########################################################################
+#                      Week 33 - Wednesday 16/08/2023                    #
+##########################################################################
+
+# Add inverted vectorization

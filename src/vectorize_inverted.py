@@ -6,7 +6,7 @@ import math
 import sys
 
 
-def vectorize(dataset_name: str, file_output=False):
+def vectorize_inverted(dataset_name: str, file_output=False):
     # Access CSV stats
     per_scene_neighborhood_stats_path = '/home/fernand0labra/rai-matterport/data/Per_Scene_Neighborhood_Stats.csv'
     per_scene_neighborhood_stats_df = pd.read_csv(per_scene_neighborhood_stats_path, sep = ',', header='infer')
@@ -35,6 +35,18 @@ def vectorize(dataset_name: str, file_output=False):
     # Locate dataset rows
     per_scene_region_neighborhoods_series = per_scene_region_neighborhoods_df.loc[per_scene_region_neighborhoods_df['Scene Name'].str.match('\d{5}-' + dataset_name)==True]
 
+    # Setup building node
+    identifier_array_nyu40id[0] = 42
+    identifier_array_nyuid[0] = 892
+
+    # Setup room nodes and edges
+    for i in range(1, num_regions + 1):
+        identifier_array_nyu40id[i] = 41  # Room 
+        identifier_array_nyuid[i] = 891  # Room 
+
+        instance_array[i - 1][0] = 0  # Building
+        instance_array[i - 1][1] = i
+
     # Setup object nodes and edges
     for idx, region_row in per_scene_region_neighborhoods_series.iterrows():  # For every region of the scene
         for object_instance in region_row['Object Instances in Region'].split(':'):  # For every instance of the region
@@ -42,8 +54,8 @@ def vectorize(dataset_name: str, file_output=False):
             category = instance_split[0]
             instance_id = int(instance_split[1])
 
-            # [0, num_objects - 1]
-            instance_array[instance_id-1][0] = region_row['Region #'] - 1 + num_objects
+            # [num_regions, num_regions + num_objects - 1]
+            instance_array[instance_id + num_regions - 1][0] = region_row['Region #'] + 1
 
             category_id_nyu40id = category_mapping_df.loc[category_mapping_df['raw_category'] == category]['nyu40id'].values
 
@@ -53,11 +65,11 @@ def vectorize(dataset_name: str, file_output=False):
                 
                 if category_id_value == 0: continue  # Category 0 is non existant
 
-                identifier_array_nyu40id[instance_id - 1] = category_id_value
-                instance_array[instance_id - 1][1] = instance_id - 1
+                identifier_array_nyu40id[instance_id + num_regions] = category_id_value
+                instance_array[instance_id + num_regions - 1][1] = instance_id + num_regions
             else:
-                identifier_array_nyu40id[instance_id - 1] = 40
-                instance_array[instance_id - 1][1] = instance_id - 1
+                identifier_array_nyu40id[instance_id + num_regions] = 40
+                instance_array[instance_id + num_regions - 1][1] = instance_id + num_regions
 
             category_id_nyuid = category_mapping_df.loc[category_mapping_df['raw_category'] == category]['nyuId'].values
 
@@ -67,24 +79,12 @@ def vectorize(dataset_name: str, file_output=False):
                 
                 if category_id_value == 0: continue  # Category 0 is non existant
 
-                identifier_array_nyuid[instance_id - 1] = category_id_value
+                identifier_array_nyuid[instance_id + num_regions] = category_id_value
             else:
-                identifier_array_nyuid[instance_id - 1] = 20
-
-    # Setup room nodes and edges
-    for i in range(num_objects, num_objects + num_regions):
-        identifier_array_nyu40id[i] = 41  # Room 
-        identifier_array_nyuid[i] = 891  # Room 
-
-        instance_array[i][0] = num_objects + num_regions  # Building
-        instance_array[i][1] = i
-
-    # Setup building node
-    identifier_array_nyu40id[num_objects + num_regions] = 42
-    identifier_array_nyuid[num_objects + num_regions] = 892
+                identifier_array_nyuid[instance_id + num_regions] = 20
 
     if(file_output):
-        f = open("/home/fernand0labra/rai-matterport/docs/" + dataset_name + ".txt", "a")
+        f = open("/home/fernand0labra/rai-matterport/docs/" + dataset_name + "_inverted.txt", "a")
         f.write(str(identifier_array_nyu40id.tolist()) + "\n")
         f.write(str(identifier_array_nyuid.tolist()) + "\n")
         f.write(str(instance_array.tolist()) + "\n")
@@ -93,4 +93,4 @@ def vectorize(dataset_name: str, file_output=False):
     return identifier_array_nyu40id, identifier_array_nyuid, instance_array
 
 
-vectorize('y9hTuugGdiq', True)
+vectorize_inverted('y9hTuugGdiq', True)
